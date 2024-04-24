@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Train Ticket Booking</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="ir.css">
+</head>
+<body>
+
+<div class="container">
+    <h1 class="mt-5 mb-4 text-center">Train Ticket Booking</h1>
+    <form action="http://localhost:8080/Irctc/book" method="post">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="fromStation">From</label>
+                <select id="fromStation" class="form-control" name="fromStation">
+                    <option selected>Select From Station</option>
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label for="toStation">To</label>
+                <select id="toStation" class="form-control" name="toStation">
+                    <option selected>Select To Station</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="margin-right: 20px;">
+                <label for="date">Date</label>
+                <input type="date" id="date" class="form-control" name="date">
+            </div>
+            <div class="form-group">
+                <label for="Gclass">Class</label>
+                <select id="Gclass" class="form-control" name="Gclass">
+                    <option selected>Select Class</option>
+                    <option value="Three_tier AC">Three_tier AC</option>
+                    <option value="Two_tier AC">Two_tier AC</option>
+                    <option value="secondClass">Second Class</option>
+                    <option value="General">General</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="train">Train</label>
+            <select id="Train" class="form-control" value="Train" name="Train">
+            </select>
+        </div>
+        <h3>Passenger Details</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="form-control" name="passengerName"></td>
+                    <td><input type="number" class="form-control" name="passengerAge"></td>
+                    <td>
+                        <select class="form-control" name="passengerGender">
+                            <option value="male" >Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="add">Add</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="submit" id="sb">BookTicket</button>
+    </form>
+</div>
+
+
+
+<script>
+
+$(document).ready(function(){
+    $('#fromStation').on('focus', function(){
+        fetchAndPopulateStations($('#fromStation'));
+    });
+
+    $('#toStation').on('focus', function(){
+        fetchAndPopulateStations($('#toStation'));
+    });
+
+    function fetchAndPopulateStations(selectElement) {
+        $.ajax({
+            url: 'http://localhost:8080/Irctc/Stations',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                selectElement.empty();
+                $.each(data.Stations, function(ind,station){
+                    let optionHTML = `
+                    <option value="${station}"> 
+                        ${station} 
+                    </option>`;
+                    selectElement.append(optionHTML);
+                });
+            },
+            error: function(xhr, status, error) {
+                console.log("Error: " + error);
+            }
+        });
+    }
+
+    $('#toStation').change(function() {
+        let fromStation = $('#fromStation').val();
+        let toStation = $('#toStation').val();
+        fetchTrainsBetweenStations(fromStation, toStation);
+    });
+
+    
+
+
+    function fetchTrainsBetweenStations(fromStation, toStation) {
+        $('#Train').empty()
+        console.log("entered")
+        $.ajax({
+            url: 'http://localhost:8080/Irctc/Train?from=' + fromStation + '&to=' + toStation,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                $.each(data,function(ind,ele){
+                    let optionHTML = `
+                    <option value="${ele.Train_no}"> 
+                        ${ele.Train_name} 
+                    </option>`;
+
+                    $('#Train').append(optionHTML)
+                })
+            },
+            error: function(xhr, status, error) {
+                console.log("Error: " + error);
+            }
+        });
+    }
+});
+
+
+    $(document).on('click', '.add', function(e){
+        e.preventDefault();
+        var rowCount = $('.table tr').length;
+        if(rowCount<6){
+            $('.table tr').find('td:last').remove();
+            $('.table tr').not(':first').append('<td><button class="rm">Remove</button></td>');
+            var row = $('<tr>');
+            var col1 = $('<td>').append('<input type="text" class="form-control" name="passengerName">');
+            row.append(col1);
+            var col2 = $('<td>').append('<input type="number" class="form-control" name="passengerAge">');
+            row.append(col2);
+            var col3 = $('<td>').append('<select class="form-control" name="passengerGender">' +
+                                '<option value="male">Male</option>' +
+                                '<option value="female">Female</option>' +
+                            '</select>');
+            row.append(col3);
+            var col4 = $('<td>').append('<button class="add">Add</button>');
+            row.append(col4);
+            $('.table').append(row);
+        }
+    });
+
+    $(document).on('click','.rm',function(e){
+        e.preventDefault();
+        $(this).closest('tr').remove();
+    })
+</script>
+
+
+</body>

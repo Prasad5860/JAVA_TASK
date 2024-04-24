@@ -1,0 +1,29 @@
+.container{
+    padding: 10px;
+    width: 700px;
+    margin-left: 50px;
+
+    margin-top:50px;
+    background-color: rgb(206, 230, 230);
+    border: 1px solid grey;
+    border-radius: 30px;
+}
+.add{
+    padding: 5px;
+    border-radius: 5px;
+}
+.rm{
+    padding: 5px;
+    border-radius: 5px;
+}
+body{
+    background-image: url('images/train1.jpg');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  background-size: cover;
+}
+#sb{
+    padding: 5px;
+    margin:5px;
+    border-radius: 10px;
+}

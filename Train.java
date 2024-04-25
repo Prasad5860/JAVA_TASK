@@ -1,9 +1,8 @@
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -53,37 +52,19 @@ public class Train extends HttpServlet {
 			return;
 		}
 
-		try {
-			Connection con = DB.initialize();
-			PreparedStatement ps = con.prepareStatement("WITH from_station AS (\r\n"
-					+ "    SELECT train_no, train_index FROM train_schedule_207 WHERE station_name = ? \r\n" + "),\r\n"
-					+ "to_station AS (\r\n"
-					+ "    SELECT train_no, train_index FROM train_schedule_207 WHERE station_name = ? \r\n" + ")\r\n"
-					+ "SELECT DISTINCT t1.train_no, td.train_name\r\n" + "FROM from_station t1\r\n"
-					+ "INNER JOIN to_station t2 ON t1.train_no = t2.train_no\r\n"
-					+ "INNER JOIN trains_207 td ON td.train_no = t1.train_no\r\n"
-					+ "WHERE t1.train_index < t2.train_index;");
-			ps.setString(1, from);
-			ps.setString(2, to);
-			ResultSet rs = ps.executeQuery();
-			JSONArray jArray = new JSONArray();
+		List<Train_ob> ts = new ArrayList<>();
 
-			while (rs.next()) {
-				JSONObject json = new JSONObject();
-				json.put("Train_no", rs.getInt(1));
-				json.put("Train_name", rs.getString(2));
-				jArray.put(json);
-
-				System.out.println(rs.getInt(1));
-				System.out.println(rs.getString(2));
-
-			}
-
-			PrintWriter out = response.getWriter();
-			out.println(jArray.toString());
-		} catch (Exception e) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occurred: " + e.getMessage());
+		ts = Trains_DB.get_Trains(from, to);
+		JSONArray jArray = new JSONArray();
+		for (int i = 0; i < ts.size(); i++) {
+			JSONObject json = new JSONObject();
+			json.put("Train_no", ts.get(i).getNumber());
+			json.put("Train_name", ts.get(i).getTrainName());
+			jArray.put(json);
 		}
+
+		PrintWriter out = response.getWriter();
+		out.println(jArray.toString());
 
 	}
 

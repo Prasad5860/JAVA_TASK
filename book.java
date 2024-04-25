@@ -1,11 +1,8 @@
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Random;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -44,9 +41,6 @@ public class book extends HttpServlet {
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 
-		Random random = new Random();
-		int ticketNumber = 100000 + random.nextInt(900000);
-
 		// Parse JSON data
 		String fromStation = request.getParameter("fromStation");
 		String toStation = request.getParameter("toStation");
@@ -65,41 +59,10 @@ public class book extends HttpServlet {
 			tot_price += Fare_prices[i];
 		}
 
-		int no = Integer.parseInt(Train);
+		List<Passenger_Data> l = new ArrayList<>();
 
-		Connection con = DB.initialize();
-
-		for (int i = 0; i < passengerNames.length; i++) {
-
-			try {
-				PreparedStatement stmt = con
-						.prepareStatement("insert into Passsengers_207 values(?,?,?,?,?,?,?,?,?,?,?)");
-				PreparedStatement pt = con.prepareStatement("select train_name from Trains_207 where train_no=?");
-				pt.setInt(1, no);
-				ResultSet rs = pt.executeQuery();
-				rs.next();
-				stmt.setInt(1, ticketNumber);
-				stmt.setString(2, fromStation);
-				stmt.setString(3, toStation);
-				stmt.setString(4, date);
-				stmt.setString(5, Train);
-				stmt.setString(6, rs.getString("train_name"));
-				stmt.setString(7, Gclass);
-				stmt.setString(8, passengerNames[i]);
-				stmt.setString(9, passengerAges[i]);
-				stmt.setString(10, passengerGenders[i]);
-				stmt.setDouble(11, Fare_prices[i]);
-
-				int j = stmt.executeUpdate();
-
-				System.out.println("Records Insterted" + j);
-
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				System.out.println("error occured");
-				e.printStackTrace();
-			}
-		}
+		l = Passenger_DB.push(fromStation, toStation, date, Train, Gclass, passengerNames, passengerAges,
+				passengerGenders);
 
 		out.println("<!DOCTYPE html>");
 		out.println("<html lang=\"en\">");
@@ -107,16 +70,18 @@ public class book extends HttpServlet {
 		out.println("</head>");
 		out.println("<body>");
 		out.println("<h1>Ticket Details</h1>");
-		out.println("<h3>PNRNumber:" + ticketNumber + "</h3>");
-		out.println("<p>From Station: " + fromStation + "</p>");
-		out.println("<p>To Station: " + toStation + "</p>");
-		out.println("<p>Date: " + date + "</p>");
-		out.println("<p>Train_NO: " + Train + "</p>");
-		out.println("<p>Class: " + Gclass + "</p>");
+		out.println("<h3>PNRNumber:" + l.get(0).getTicketNumber() + "</h3>");
+		out.println("<p>From Station: " + l.get(0).getFromStation() + "</p>");
+		out.println("<p>To Station: " + l.get(0).getToStation() + "</p>");
+		out.println("<p>Date: " + l.get(0).getDate() + "</p>");
+		out.println("<p>Train_NO: " + l.get(0).getTrainNumber() + "</p>");
+		out.println("<p>Train_Name: " + l.get(0).getTrainName() + "</p>");
+		out.println("<p>Class: " + l.get(0).getTicketClass() + "</p>");
 		out.println("<h2>Passenger Details</h2>");
-		for (int i = 0; i < passengerNames.length; i++) {
-			out.println("<p><b>PassengerName:</b>      " + passengerNames[i] + "  <b>Age:</b>      " + passengerAges[i]
-					+ "  <b>Gender: </b>" + passengerGenders[i] + "     <b>Ticket_fare:</b>" + Fare_prices[i]);
+		for (int i = 0; i < l.size(); i++) {
+			out.println("<p><b>PassengerName:</b>      " + l.get(i).getPassengerName() + "  <b>Age:</b>      "
+					+ l.get(i).getPassengerAge() + "  <b>Gender: </b>" + l.get(i).getPassengerGender()
+					+ "     <b>Ticket_fare:</b>" + l.get(i).getFarePrice());
 		}
 
 		out.println("<h4>Total Ticket Cost:   " + tot_price + "</h4>");

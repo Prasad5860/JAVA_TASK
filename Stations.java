@@ -2,8 +2,9 @@
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -44,32 +45,17 @@ public class Stations extends HttpServlet {
 				"Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 		response.setHeader("Access-Control-Allow-Credentials", "true");
 
-		try {
-			conn = (Connection) DB.initialize();
-			st = conn.createStatement();
-
-			String qry = "select station_name from stations_207";
-
-			ResultSet rs = st.executeQuery(qry);
-
-			JSONArray jArray = new JSONArray();
-
-			while (rs.next()) {
-				jArray.put(rs.getString(1));
-			}
-
-			JSONObject json = new JSONObject();
-
-			json.put("Stations", jArray);
-			response.setContentType("application/json");
-			PrintWriter out = response.getWriter();
-			out.println(json.toString());
-
-		} catch (Exception e) {
-
-			System.out.println(e.getMessage());
+		List<Station_ob> ls = new ArrayList<>();
+		ls = Station_DB.get_stations();
+		JSONArray jArray = new JSONArray();
+		JSONObject json = new JSONObject();
+		for (int i = 0; i < ls.size(); i++) {
+			jArray.put(ls.get(i).getStationName());
 		}
-
+		json.put("Stations", jArray);
+		response.setContentType("application/json");
+		PrintWriter out = response.getWriter();
+		out.println(json.toString());
 	}
 
 	/**
